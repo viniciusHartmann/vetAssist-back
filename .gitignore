@@ -1,0 +1,41 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Testes
+coverage/
+.nyc_output/
+
+# Variaveis de ambiente — NUNCA commitar segredos reais
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editores
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Certificados e chaves
+*.pem
+*.key
+
+# Temporarios
+.cache/
+tmp/
+temp/

@@ -1,0 +1,9 @@
+Diretorio intencionalmente vazio.
+
+Nenhuma migration foi gerada nesta entrega, conforme decidido no planejamento.
+O schema deve ser criado manualmente no SQL editor do Supabase — o script
+completo esta no README.md, secao "Schema do banco".
+
+Quando o projeto passar a usar migrations versionadas:
+  npm run migration:generate -- src/database/migrations/NomeDaMigration
+  npm run migration:run
