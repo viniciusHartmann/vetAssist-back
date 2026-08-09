@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 import { EntidadeBase } from '../../database/entidade-base';
 import { Usuario } from '../../auth/entities/usuario.entity';
 import { SinalClinico } from './sinal-clinico.entity';
@@ -35,9 +35,27 @@ export class Patologia extends EntidadeBase {
   @JoinColumn({ name: 'usuario_id' })
   usuario: Usuario | null;
 
-  @OneToMany(() => SinalClinico, (sinal) => sinal.patologia, { cascade: false })
+  /**
+   * Patologia e o lado dono das duas relacoes N:N.
+   *
+   * Os nomes de tabela e coluna sao declarados explicitamente pelo mesmo motivo
+   * que `@Entity('...')` declara o nome da tabela: o que a naming strategy
+   * geraria (`patologias_sinais_sinais_clinicos`, coluna `patologias_id`) e
+   * ilegivel e no plural, contradizendo o `usuario_id` do resto do schema.
+   */
+  @ManyToMany(() => SinalClinico, (sinal) => sinal.patologias)
+  @JoinTable({
+    name: 'patologias_sinais',
+    joinColumn: { name: 'patologia_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'sinal_id', referencedColumnName: 'id' },
+  })
   sinais: SinalClinico[];
 
-  @OneToMany(() => Tratamento, (tratamento) => tratamento.patologia, { cascade: false })
+  @ManyToMany(() => Tratamento, (tratamento) => tratamento.patologias)
+  @JoinTable({
+    name: 'patologias_tratamentos',
+    joinColumn: { name: 'patologia_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tratamento_id', referencedColumnName: 'id' },
+  })
   tratamentos: Tratamento[];
 }

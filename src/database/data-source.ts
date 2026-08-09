@@ -10,8 +10,7 @@ carregarEnv();
  * DataSource usado APENAS pela CLI do TypeORM (migration:generate/run).
  * A aplicacao usa a configuracao de database.module.ts.
  *
- * Nenhuma migration foi gerada nesta entrega — o diretorio migrations/ esta
- * intencionalmente vazio e o schema e criado manualmente (ver README).
+ * O schema e criado por migrations (`npm run migration:run`), nao a mao.
  */
 export default new DataSource({
   type: 'postgres',

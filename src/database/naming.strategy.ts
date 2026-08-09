@@ -63,6 +63,12 @@ export class EstrategiaNomeSnakePt extends DefaultNamingStrategy implements Nami
     return `idx_${nomeDaTabela(tabelaOuNome)}_${colunas.join('_')}`;
   }
 
+  override primaryKeyName(tabelaOuNome: Table | string): string {
+    // Sem este override o TypeORM gera `PK_<hash>`, ilegivel no psql e nos
+    // erros do Postgres. Uma tabela so tem uma PK, entao o nome da tabela basta.
+    return `pk_${nomeDaTabela(tabelaOuNome)}`;
+  }
+
   override foreignKeyName(tabelaOuNome: Table | string, nomesColunas: string[]): string {
     return `fk_${nomeDaTabela(tabelaOuNome)}_${nomesColunas.join('_')}`;
   }

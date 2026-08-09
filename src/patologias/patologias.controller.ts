@@ -17,22 +17,14 @@ import {
   CriarPatologiaDto,
   ListarPatologiasDto,
 } from './dto/patologia.dto';
-import { CriarSinalDto } from './dto/sinal.dto';
-import { AtualizarTratamentoDto, CriarTratamentoDto } from './dto/tratamento.dto';
 import { PatologiasService } from './patologias.service';
-import { SinaisService } from './sinais.service';
-import { TratamentosService } from './tratamentos.service';
 
 /** ParseUUIDPipe evita que um id invalido vire erro de cast do Postgres (500). */
 const PipeUuid = new ParseUUIDPipe({ version: '4' });
 
 @Controller('patologias')
 export class PatologiasController {
-  constructor(
-    private readonly patologias: PatologiasService,
-    private readonly sinais: SinaisService,
-    private readonly tratamentos: TratamentosService,
-  ) {}
+  constructor(private readonly patologias: PatologiasService) {}
 
   @Get()
   listar(@Query() filtros: ListarPatologiasDto, @UsuarioAtual('id') usuarioId: string) {
@@ -44,6 +36,7 @@ export class PatologiasController {
     return this.patologias.buscarPorId(id, usuarioId);
   }
 
+  /** Aceita sinais/tratamentos existentes e novos no mesmo payload. */
   @Post()
   @HttpCode(HttpStatus.CREATED)
   criar(@Body() dados: CriarPatologiaDto, @UsuarioAtual('id') usuarioId: string) {
@@ -64,55 +57,46 @@ export class PatologiasController {
     return this.patologias.remover(id, usuarioId);
   }
 
-  // --- Sinais clinicos ---
+  // --- Vinculos ---
+  //
+  // Rotas de conveniencia para mexer em um vinculo isolado (o "x" no chip) sem
+  // reenviar o formulario inteiro via PATCH. Nunca criam nem apagam itens do
+  // catalogo: so a linha da tabela de juncao. O cadastro de sinais e
+  // tratamentos em si vive em /sinais e /tratamentos.
 
-  @Post(':id/sinais')
-  @HttpCode(HttpStatus.CREATED)
-  criarSinal(
-    @Param('id', PipeUuid) patologiaId: string,
-    @Body() dados: CriarSinalDto,
-    @UsuarioAtual('id') usuarioId: string,
-  ) {
-    return this.sinais.criar(patologiaId, dados, usuarioId);
-  }
-
-  @Delete(':id/sinais/:sinalId')
-  removerSinal(
+  @Post(':id/sinais/:sinalId')
+  vincularSinal(
     @Param('id', PipeUuid) patologiaId: string,
     @Param('sinalId', PipeUuid) sinalId: string,
     @UsuarioAtual('id') usuarioId: string,
   ) {
-    return this.sinais.remover(patologiaId, sinalId, usuarioId);
+    return this.patologias.vincularSinal(patologiaId, sinalId, usuarioId);
   }
 
-  // --- Tratamentos ---
-
-  @Post(':id/tratamentos')
-  @HttpCode(HttpStatus.CREATED)
-  criarTratamento(
+  @Delete(':id/sinais/:sinalId')
+  desvincularSinal(
     @Param('id', PipeUuid) patologiaId: string,
-    @Body() dados: CriarTratamentoDto,
+    @Param('sinalId', PipeUuid) sinalId: string,
     @UsuarioAtual('id') usuarioId: string,
   ) {
-    return this.tratamentos.criar(patologiaId, dados, usuarioId);
+    return this.patologias.desvincularSinal(patologiaId, sinalId, usuarioId);
   }
 
-  @Patch(':id/tratamentos/:tratamentoId')
-  atualizarTratamento(
+  @Post(':id/tratamentos/:tratamentoId')
+  vincularTratamento(
     @Param('id', PipeUuid) patologiaId: string,
     @Param('tratamentoId', PipeUuid) tratamentoId: string,
-    @Body() dados: AtualizarTratamentoDto,
     @UsuarioAtual('id') usuarioId: string,
   ) {
-    return this.tratamentos.atualizar(patologiaId, tratamentoId, dados, usuarioId);
+    return this.patologias.vincularTratamento(patologiaId, tratamentoId, usuarioId);
   }
 
   @Delete(':id/tratamentos/:tratamentoId')
-  removerTratamento(
+  desvincularTratamento(
     @Param('id', PipeUuid) patologiaId: string,
     @Param('tratamentoId', PipeUuid) tratamentoId: string,
     @UsuarioAtual('id') usuarioId: string,
   ) {
-    return this.tratamentos.remover(patologiaId, tratamentoId, usuarioId);
+    return this.patologias.desvincularTratamento(patologiaId, tratamentoId, usuarioId);
   }
 }

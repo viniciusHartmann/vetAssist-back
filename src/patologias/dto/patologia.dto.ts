@@ -1,10 +1,23 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { Transform } from 'class-transformer';
-import { IsEnum, IsOptional, IsString, Length, MaxLength } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+  MaxLength,
+  ValidateNested,
+} from 'class-validator';
+import { aparar } from '../../common/transformacoes';
 import { Especie } from '../entities/patologia.entity';
+import { CriarSinalDto } from './sinal.dto';
+import { CriarTratamentoDto } from './tratamento.dto';
 
-const aparar = ({ value }: { value: unknown }): unknown =>
-  typeof value === 'string' ? value.trim() : value;
+/** Teto por requisicao: `save()` com N:N emite queries de diff por relacao. */
+const LIMITE_VINCULOS = 100;
 
 export class CriarPatologiaDto {
   @Transform(aparar)
@@ -20,6 +33,37 @@ export class CriarPatologiaDto {
   @IsString({ message: 'Descricao deve ser um texto' })
   @MaxLength(4000, { message: 'Descricao deve ter no maximo 4000 caracteres' })
   descricao?: string;
+
+  /** Ids de sinais que ja existem no catalogo (escolhidos no autocomplete). */
+  @IsOptional()
+  @IsArray({ message: 'sinaisIds deve ser uma lista' })
+  @ArrayMaxSize(LIMITE_VINCULOS, { message: `No maximo ${LIMITE_VINCULOS} sinais` })
+  @IsUUID('4', { each: true, message: 'sinaisIds deve conter uuids validos' })
+  sinaisIds?: string[];
+
+  /**
+   * Sinais digitados na hora. Se a descricao ja existir no catalogo (comparacao
+   * case-insensitive), o existente e reaproveitado em vez de duplicar.
+   */
+  @IsOptional()
+  @IsArray({ message: 'novosSinais deve ser uma lista' })
+  @ArrayMaxSize(LIMITE_VINCULOS, { message: `No maximo ${LIMITE_VINCULOS} sinais` })
+  @ValidateNested({ each: true })
+  @Type(() => CriarSinalDto)
+  novosSinais?: CriarSinalDto[];
+
+  @IsOptional()
+  @IsArray({ message: 'tratamentosIds deve ser uma lista' })
+  @ArrayMaxSize(LIMITE_VINCULOS, { message: `No maximo ${LIMITE_VINCULOS} tratamentos` })
+  @IsUUID('4', { each: true, message: 'tratamentosIds deve conter uuids validos' })
+  tratamentosIds?: string[];
+
+  @IsOptional()
+  @IsArray({ message: 'novosTratamentos deve ser uma lista' })
+  @ArrayMaxSize(LIMITE_VINCULOS, { message: `No maximo ${LIMITE_VINCULOS} tratamentos` })
+  @ValidateNested({ each: true })
+  @Type(() => CriarTratamentoDto)
+  novosTratamentos?: CriarTratamentoDto[];
 }
 
 export class AtualizarPatologiaDto extends PartialType(CriarPatologiaDto) {}

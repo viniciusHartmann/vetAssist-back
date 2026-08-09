@@ -1,10 +1,11 @@
 import { Transform } from 'class-transformer';
 import { IsISO8601, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PaginacaoDto } from '../../common/dto/paginacao.dto';
+import { aparar } from '../../common/transformacoes';
 
 export class ListarTranscricoesDto extends PaginacaoDto {
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(aparar)
   @IsString()
   @MaxLength(160, { message: 'Nome deve ter no maximo 160 caracteres' })
   nome?: string;
